@@ -1,19 +1,13 @@
 """
 Streamlit app (read-only) để tra cứu nhật kí du lịch và kế hoạch chuyến đi (Nha Trang).
 
-HƯỚNG DẪN NGẮN:
-- Tác giả muốn **chỉ tra cứu**: app này KHÔNG có khả năng thêm/sửa/xóa; chỉ có bộ lọc/tra cứu/hiển thị.
-- Bạn sẽ **chèn dữ liệu trực tiếp vào các biến Python** phía dưới (theo comment).
+- App chỉ cho phép tra cứu (read-only), không có thêm/sửa/xoá.
+- Bạn nhập dữ liệu trực tiếp trong code ở phần "DỮ LIỆU MẪU".
 - Chạy: `streamlit run app_nhatrang_lookup.py`
 
-Cấu trúc dữ liệu mẫu (thay thế bằng dữ liệu của bạn):
-- diary_entries: danh sách dict với keys: 'date' (YYYY-MM-DD), 'time' (HH:MM), 'activity' (hoạt động/địa điểm)
-- trip_meta: dict chứa thông tin chung chuyến đi
-- itinerary: list of dicts: { 'day': 1, 'morning': '...', 'afternoon': '...', 'evening': '...' }
-- hotels: list of dicts: { 'name', 'checkin', 'checkout', 'phone', 'notes' }
-- trains: dict with keys 'to_nhatrang' and 'to_saigon', each is list of dicts { 'train_no', 'dep_time', 'arr_time' }
-
-NOTE: Đây là app read-only; nếu muốn log (ghi) bạn nói, nhưng theo yêu cầu mình không thêm chức năng đó.
+Yêu cầu cập nhật:
+- Hiển thị số thứ tự bắt đầu từ 1 (không phải 0).
+- Tên cột rõ ràng trong bảng hiển thị.
 """
 
 import streamlit as st
@@ -25,7 +19,6 @@ st.set_page_config(page_title="Tra cứu Nhật ký & Kế hoạch - Nha Trang",
 
 # ------------------------
 # ---- DỮ LIỆU MẪU ----
-# Thay thế / dán dữ liệu của bạn vào các biến dưới đây.
 # ------------------------
 
 diary_entries = [
@@ -131,7 +124,7 @@ with st.sidebar.expander('Bộ lọc khác'):
     hotel_search = st.text_input('Tìm khách sạn (tên)')
     train_search = st.text_input('Tìm tàu (số hiệu)')
 
-# Main layout tabs
+# Main layout
 if 'Tổng quan' in show_section:
     st.header('Tổng quan chuyến đi')
     c1, c2, c3 = st.columns(3)
@@ -146,7 +139,6 @@ if 'Nhật ký' in show_section:
         st.info('Chưa có mục nhật ký. Hãy dán danh sách `diary_entries` vào phần DỮ LIỆU ở đầu file.')
     else:
         filtered = df_diary.copy()
-        # apply date range
         try:
             if diary_date_min and diary_date_max and isinstance(diary_date_min, (list, tuple)):
                 dmin, dmax = diary_date_min
@@ -156,22 +148,23 @@ if 'Nhật ký' in show_section:
                 filtered = filtered[(filtered['date_only'] >= dmin) & (filtered['date_only'] <= dmax)]
         except Exception:
             pass
-        # text search
         if text_search:
             filtered = filtered[filtered['activity'].str.contains(text_search, case=False, na=False)]
 
         st.write(f'Hiển thị {len(filtered)} kết quả')
-        st.dataframe(filtered[['date','time','activity']].sort_values(['date','time'], ascending=[True,True]).reset_index(drop=True))
+        df_display = filtered[['date','time','activity']].sort_values(['date','time']).reset_index(drop=True)
+        df_display.index = df_display.index + 1  # STT từ 1
+        df_display = df_display.rename(columns={'date':'Ngày','time':'Thời gian','activity':'Hoạt động/Địa điểm'})
+        st.dataframe(df_display)
 
         with st.expander('Xem chi tiết theo mục'):
-            idx = st.number_input('Chọn chỉ số hàng (index, 0-based)', min_value=0, max_value=max(0, len(filtered)-1), value=0)
-            if len(filtered)>0:
-                row = filtered.sort_values(['date','time']).reset_index(drop=True).iloc[int(idx)]
-                st.write('**Ngày:**', row.get('date'))
-                st.write('**Thời gian:**', row.get('time'))
-                st.write('**Hoạt động/Địa điểm:**', row.get('activity'))
-                if row.get('datetime'):
-                    st.write('**Giờ VN:**', row['datetime'].strftime("%Y-%m-%d %H:%M %Z%z"))
+            idx = st.number_input('Chọn số thứ tự (STT, bắt đầu từ 1)', min_value=1, max_value=max(1, len(df_display)), value=1)
+            row = df_display.iloc[int(idx)-1]
+            st.write('**Ngày:**', row['Ngày'])
+            st.write('**Thời gian:**', row['Thời gian'])
+            st.write('**Hoạt động/Địa điểm:**', row['Hoạt động/Địa điểm'])
+            if 'datetime' in filtered.columns and not pd.isna(filtered.iloc[int(idx)-1]['datetime']):
+                st.write('**Giờ VN:**', filtered.iloc[int(idx)-1]['datetime'].strftime("%Y-%m-%d %H:%M %Z%z"))
 
 if 'Lịch trình' in show_section:
     st.header('Lịch trình chi tiết')
@@ -192,9 +185,17 @@ if 'Lịch trình' in show_section:
                 st.write('Tối:')
                 st.write(r.get('evening',''))
 
+if 'Khách sạn' in show_section:
+    st.header('Thông tin khách sạn')
+    if df_hotels.empty:
+        st.info('Chưa có khách sạn. Hãy dán `hotels` vào phần DỮ LIỆU ở đầu file.')
+    else:
+        df_h = df_hotels.copy()
         if hotel_search:
             df_h = df_h[df_h['name'].str.contains(hotel_search, case=False, na=False)]
-        st.dataframe(df_h[['name','checkin','checkout','phone','notes']].reset_index(drop=True))
+        df_h = df_h.rename(columns={'name':'Tên khách sạn','checkin':'Ngày Check-in','checkout':'Ngày Check-out','phone':'SĐT liên hệ','notes':'Ghi chú'})
+        df_h.index = df_h.index + 1
+        st.dataframe(df_h[['Tên khách sạn','Ngày Check-in','Ngày Check-out','SĐT liên hệ','Ghi chú']].reset_index(drop=True))
 
 if 'Tàu hoả' in show_section:
     st.header('Thông tin tàu hoả')
@@ -205,6 +206,8 @@ if 'Tàu hoả' in show_section:
         df_tt = df_trains_to.copy()
         if train_search:
             df_tt = df_tt[df_tt['train_no'].str.contains(train_search, case=False, na=False)]
+        df_tt = df_tt.rename(columns={'train_no':'Số hiệu tàu','dep_time':'Giờ khởi hành','arr_time':'Giờ đến'})
+        df_tt.index = df_tt.index + 1
         st.table(df_tt)
 
     st.subheader('Tàu về (về Sài Gòn)')
@@ -214,9 +217,11 @@ if 'Tàu hoả' in show_section:
         df_tb = df_trains_back.copy()
         if train_search:
             df_tb = df_tb[df_tb['train_no'].str.contains(train_search, case=False, na=False)]
+        df_tb = df_tb.rename(columns={'train_no':'Số hiệu tàu','dep_time':'Giờ khởi hành','arr_time':'Giờ đến'})
+        df_tb.index = df_tb.index + 1
         st.table(df_tb)
 
 st.markdown('---')
-st.caption('Ghi chú: Ứng dụng read-only — chỉnh dữ liệu trong file Python (các biến ở đầu file).')
+st.caption('Ứng dụng read-only — chỉnh dữ liệu trực tiếp trong file Python (các biến ở đầu file).')
 
 # END
