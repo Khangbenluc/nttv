@@ -1,241 +1,216 @@
-"""
-Streamlit app (read-only) để tra cứu nhật kí du lịch và kế hoạch chuyến đi (Nha Trang).
-
-- App chỉ cho phép tra cứu (read-only), không có thêm/sửa/xoá.
-- Bạn nhập dữ liệu trực tiếp trong code ở phần "DỮ LIỆU MẪU".
-- Chạy: `streamlit run app_nhatrang_lookup.py`
-
-Yêu cầu cập nhật:
-- Hiển thị số thứ tự bắt đầu từ 1 (không phải 0).
-- Tên cột rõ ràng trong bảng hiển thị.
-- Fix lỗi IndexError khi bộ lọc trả về 0 kết quả (sử dụng số thứ tự để xem chi tiết).
-"""
-
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 import pytz
+import logging
 
-st.set_page_config(page_title="Tra cứu Nhật ký & Kế hoạch - Nha Trang", layout="wide")
+# ============================
+# LOGGING CẤU HÌNH
+# ============================
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-# ------------------------
-# ---- DỮ LIỆU MẪU ----
-# ------------------------
-
+# ============================
+# DỮ LIỆU MẪU
+# ============================
 diary_entries = [
-    { 'date': '2025-08-20', 'time': '08:30', 'activity': 'Ăn sáng tại quán Bánh Căn Phan Rang - check-in resort' },
-    { 'date': '2025-08-20', 'time': '13:00', 'activity': 'Tham quan Tháp Bà Ponagar' },
-    { 'date': '2025-08-21', 'time': '09:00', 'activity': 'Lặn ngắm san hô (đi tàu ra Hòn Mun)' },
-    { 'date': '2025-08-22', 'time': '19:00', 'activity': 'Dạo chợ đêm Nha Trang' },
+    {"date": "2025-09-01", "time": "08:30", "activity": "Đến Nha Trang"},
+    {"date": "2025-09-01", "time": "15:00", "activity": "Tắm biển"},
+    {"date": "2025-09-02", "time": "09:00", "activity": "Tham quan Hòn Mun"},
 ]
 
 trip_meta = {
-    'destination': 'Nha Trang',
-    'num_days': 3,
-    'num_people': 2,
-    'theme': 'Biển - Ẩm thực - Thư giãn',
+    "location": "Nha Trang",
+    "days": 5,
+    "people": 4,
+    "theme": "Nghỉ dưỡng và khám phá"
 }
 
 itinerary = [
-    { 'day': 1, 'morning': 'Đến Nha Trang, nhận phòng khách sạn', 'afternoon': '-', 'evening': 'Dạo biển, ăn tối' },
-    { 'day': 2, 'morning': 'Hòn Mun - lặn biển', 'afternoon': 'VinWonders (nếu thích)', 'evening': '-' },
-    { 'day': 3, 'morning': 'Tháp Bà Ponagar', 'afternoon': 'Trở về', 'evening': '-' },
+    {"day": 1, "morning": "Đến Nha Trang, nhận phòng khách sạn", "afternoon": "-", "evening": "Dạo biển, ăn tối"},
+    {"day": 2, "morning": "Hòn Mun - lặn biển", "afternoon": "VinWonders", "evening": "-"},
 ]
 
 hotels = [
-    { 'name': 'Seaside Resort', 'checkin': '2025-08-20', 'checkout': '2025-08-23', 'phone': '+84 258 3xxxxxx', 'notes': 'Phòng view biển' },
+    {"name": "Sunrise Nha Trang", "checkin": "2025-09-01", "checkout": "2025-09-05", "phone": "0123456789", "notes": "Gần biển"}
 ]
 
 trains = {
-    'to_nhatrang': [
-        { 'train_no': 'SE2', 'dep_time': '06:00', 'arr_time': '11:30' },
-    ],
-    'to_saigon': [
-        { 'train_no': 'SE5', 'dep_time': '14:00', 'arr_time': '19:30' },
-    ]
+    "depart": {"train_no": "SE8", "depart_time": "2025-09-01 06:00", "arrive_time": "2025-09-01 14:00"},
+    "return": {"train_no": "SE7", "depart_time": "2025-09-05 20:00", "arrive_time": "2025-09-06 04:00"}
 }
 
-# ------------------------
-# ---- XỬ LÝ DỮ LIỆU ----
-# ------------------------
-
+# ============================
+# TIMEZONE
+# ============================
 VN_TZ = pytz.timezone("Asia/Ho_Chi_Minh")
 
-def parse_datetime(date_str, time_str):
-    try:
-        dt = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
-        return VN_TZ.localize(dt)
-    except Exception:
-        try:
-            dt = datetime.strptime(date_str, "%Y-%m-%d")
-            return VN_TZ.localize(dt)
-        except Exception:
-            return None
+# ============================
+# POPUP THÔNG BÁO
+# ============================
+def show_popup_notice():
+    """Hiển thị popup thông báo nổi ở chính giữa màn hình."""
+    if "show_notice" not in st.session_state:
+        st.session_state.show_notice = True
 
-# Diary DataFrame
-df_diary = pd.DataFrame(diary_entries)
-if not df_diary.empty:
-    if 'date' in df_diary.columns and 'time' in df_diary.columns:
-        df_diary['datetime'] = df_diary.apply(lambda r: parse_datetime(r['date'], r['time']), axis=1)
-        df_diary['date_only'] = pd.to_datetime(df_diary['date'], errors='coerce').dt.date
-    else:
-        df_diary['datetime'] = pd.NaT
-        df_diary['date_only'] = pd.NaT
+    if st.session_state.show_notice:
+        popup_html = """
+        <style>
+        #popup {
+          position: fixed; top: 50%; left: 50%;
+          transform: translate(-50%, -50%);
+          background: white; padding: 30px; border-radius: 12px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          z-index: 9999; max-width: 400px; text-align: center;
+        }
+        .close-btn {
+          margin-top: 20px; padding: 10px 20px;
+          background: #f00; color: white; border: none;
+          border-radius: 6px; cursor: pointer;
+        }
+        </style>
 
-# Itinerary DataFrame
-df_itin = pd.DataFrame(itinerary)
+        <div id="popup">
+          <h3 style="color:red;">⚠️ Thông báo</h3>
+          <p>Trang web đang trong quá trình hoàn thiện.<br>Dữ liệu hiện tại chỉ là thử nghiệm.</p>
+          <button class="close-btn" onclick="document.getElementById('popup').style.display='none'">
+            Đóng
+          </button>
+        </div>
+        """
+        st.components.v1.html(popup_html, height=300, width=None)
+        logger.info("Hiển thị popup cảnh báo.")
 
-# Hotels DataFrame
-df_hotels = pd.DataFrame(hotels)
-if not df_hotels.empty:
-    df_hotels['checkin_date'] = pd.to_datetime(df_hotels['checkin'], errors='coerce').dt.date
-    df_hotels['checkout_date'] = pd.to_datetime(df_hotels['checkout'], errors='coerce').dt.date
+# ============================
+# HÀM HIỂN THỊ NHẬT KÝ
+# ============================
+def show_diary():
+    st.header("📔 Nhật ký du lịch")
+    df_diary = pd.DataFrame(diary_entries)
 
-# Trains DataFrame
-df_trains_to = pd.DataFrame(trains.get('to_nhatrang', []))
-df_trains_back = pd.DataFrame(trains.get('to_saigon', []))
-
-# ------------------------
-# ---- GIAO DIỆN ----
-# ------------------------
-
-st.title('🔎 Ứng dụng tra cứu — Nhật ký & Kế hoạch du lịch Nha Trang')
-st.markdown('**Lưu ý:** App chỉ _tra cứu_ (read-only). Chèn / sửa dữ liệu trực tiếp trong mã ở phần DỮ LIỆU MẪU phía trên.')
-
-# Sidebar filters
-st.sidebar.header('Bộ lọc tra cứu')
-show_section = st.sidebar.multiselect('Hiển thị phần', ['Tổng quan', 'Nhật ký', 'Lịch trình', 'Khách sạn', 'Tàu hoả'], default=['Tổng quan', 'Nhật ký', 'Lịch trình'])
-
-# Diary filters
-with st.sidebar.expander('Bộ lọc Nhật ký'):
-    diary_date_min = None
-    diary_date_max = None
-    if not df_diary.empty:
-        min_date = df_diary['date_only'].min()
-        max_date = df_diary['date_only'].max()
-        diary_date_min, diary_date_max = st.date_input('Khoảng ngày', value=(min_date, max_date))
-    text_search = st.text_input('Tìm theo từ khoá (hoạt động/địa điểm)')
-
-# Itinerary filters
-with st.sidebar.expander('Bộ lọc Lịch trình'):
-    day_select = st.selectbox('Chọn ngày (nếu muốn)', options=['Tất cả'] + df_itin['day'].astype(str).tolist() if not df_itin.empty else ['Tất cả'])
-
-# Hotels & trains filters
-with st.sidebar.expander('Bộ lọc khác'):
-    hotel_search = st.text_input('Tìm khách sạn (tên)')
-    train_search = st.text_input('Tìm tàu (số hiệu)')
-
-# Main layout
-if 'Tổng quan' in show_section:
-    st.header('Tổng quan chuyến đi')
-    c1, c2, c3 = st.columns(3)
-    c1.metric('Địa điểm', trip_meta.get('destination', '-'))
-    c2.metric('Số ngày', trip_meta.get('num_days', '-'))
-    c3.metric('Số người', trip_meta.get('num_people', '-'))
-    st.write('**Chủ đề:**', trip_meta.get('theme', '-'))
-
-if 'Nhật ký' in show_section:
-    st.header('Nhật ký (Diary)')
     if df_diary.empty:
-        st.info('Chưa có mục nhật ký. Hãy dán danh sách `diary_entries` vào phần DỮ LIỆU ở đầu file.')
+        st.info("Chưa có dữ liệu nhật ký.")
+        logger.warning("Không có dữ liệu nhật ký để hiển thị.")
     else:
-        filtered = df_diary.copy()
-        # Áp dụng khoảng ngày (nếu người dùng thay đổi)
-        try:
-            if diary_date_min and diary_date_max and isinstance(diary_date_min, (list, tuple)):
-                dmin, dmax = diary_date_min
-                filtered = filtered[(filtered['date_only'] >= dmin) & (filtered['date_only'] <= dmax)]
-            elif diary_date_min and diary_date_max:
-                dmin, dmax = diary_date_min, diary_date_max
-                filtered = filtered[(filtered['date_only'] >= dmin) & (filtered['date_only'] <= dmax)]
-        except Exception:
-            pass
-        # Tìm theo từ khoá
-        if text_search:
-            filtered = filtered[filtered['activity'].str.contains(text_search, case=False, na=False)]
+        search_term = st.text_input("Tìm kiếm hoạt động hoặc địa điểm trong nhật ký:")
+        logger.info(f"Tìm kiếm nhật ký với từ khóa: {search_term}")
 
-        st.write(f'Hiển thị {len(filtered)} kết quả')
-
-        # Nếu không có kết quả thì không hiển thị number_input để tránh out-of-bounds
-        if filtered.empty:
-            # Hiển thị bảng rỗng với tên cột rõ ràng
-            empty_df = pd.DataFrame(columns=['Ngày', 'Thời gian', 'Hoạt động/Địa điểm'])
-            st.dataframe(empty_df)
-            st.info('Không có kết quả khớp với bộ lọc.')
+        if search_term:
+            filtered = df_diary[df_diary["activity"].str.contains(search_term, case=False, na=False)]
         else:
-            # Sắp xếp và tạo bảng hiển thị (STT bắt đầu từ 1)
-            filtered_sorted = filtered.sort_values(['date','time']).reset_index(drop=True)
-            df_display = filtered_sorted[['date','time','activity']].copy()
-            df_display = df_display.rename(columns={'date':'Ngày','time':'Thời gian','activity':'Hoạt động/Địa điểm'})
-            df_display.index = df_display.index + 1
-            st.dataframe(df_display)
+            filtered = df_diary
 
-            # Chọn STT (1-based) — đúng giới hạn
-            idx = st.number_input('Chọn số thứ tự (STT, bắt đầu từ 1)', min_value=1, max_value=len(df_display), value=1)
-            sel = filtered_sorted.iloc[int(idx)-1]
-            st.write('**Ngày:**', sel['date'])
-            st.write('**Thời gian:**', sel['time'])
-            st.write('**Hoạt động/Địa điểm:**', sel['activity'])
-            if 'datetime' in filtered_sorted.columns and not pd.isna(sel.get('datetime')):
-                st.write('**Giờ VN:**', sel['datetime'].strftime("%Y-%m-%d %H:%M %Z%z"))
+        if filtered.empty:
+            st.warning("Không tìm thấy kết quả phù hợp.")
+            logger.warning("Kết quả tìm kiếm rỗng.")
+        else:
+            df_show = filtered.copy()
+            df_show.index = range(1, len(df_show) + 1)
+            df_show.index.name = "STT"
+            st.dataframe(df_show.rename(columns={"date": "Ngày", "time": "Thời gian", "activity": "Hoạt động/Địa điểm"}))
 
-if 'Lịch trình' in show_section:
-    st.header('Lịch trình chi tiết')
+            idx = st.number_input("Chọn số thứ tự hàng (STT):", min_value=1, max_value=len(df_show), step=1)
+            row = df_show.iloc[idx - 1]
+            st.success(f"📅 {row['date']} ⏰ {row['time']} → {row['activity']}")
+            logger.info(f"Hiển thị chi tiết nhật ký STT {idx}: {row.to_dict()}")
+
+# ============================
+# HÀM HIỂN THỊ THÔNG TIN CHUNG
+# ============================
+def show_meta():
+    st.header("ℹ️ Thông tin chung chuyến đi")
+    st.write(f"**Địa điểm:** {trip_meta['location']}")
+    st.write(f"**Số ngày:** {trip_meta['days']}")
+    st.write(f"**Số người:** {trip_meta['people']}")
+    st.write(f"**Chủ đề:** {trip_meta['theme']}")
+    logger.info("Hiển thị thông tin chung chuyến đi.")
+
+# ============================
+# HÀM HIỂN THỊ LỊCH TRÌNH
+# ============================
+def show_itinerary():
+    st.header("📅 Lịch trình chi tiết")
+    df_itin = pd.DataFrame(itinerary)
+
     if df_itin.empty:
-        st.info('Chưa có lịch trình. Hãy dán `itinerary` vào phần DỮ LIỆU ở đầu file.')
+        st.info("Chưa có lịch trình.")
+        logger.warning("Không có dữ liệu lịch trình.")
     else:
-        if day_select != 'Tất cả':
-            day_num = int(day_select)
-            df_show = df_itin[df_itin['day']==day_num]
+        day_options = ["Tất cả"] + [f"Ngày {d}" for d in df_itin['day'].unique()]
+        day_select = st.selectbox("Chọn ngày:", day_options)
+        logger.info(f"Người dùng chọn {day_select} trong lịch trình.")
+
+        if day_select != "Tất cả":
+            day_num = int(day_select.split()[1])
+            df_show = df_itin[df_itin["day"] == day_num]
         else:
             df_show = df_itin
-        for _, r in df_show.sort_values('day').iterrows():
-            with st.expander(f"Ngày {int(r['day'])}"):
-                st.write('Sáng:')
-                st.write(r.get('morning',''))
-                st.write('Chiều:')
-                st.write(r.get('afternoon',''))
-                st.write('Tối:')
-                st.write(r.get('evening',''))
 
-if 'Khách sạn' in show_section:
-    st.header('Thông tin khách sạn')
+        for _, r in df_show.sort_values("day").iterrows():
+            with st.expander(f"Ngày {int(r['day'])}"):
+                st.write("Sáng:", r.get("morning", ""))
+                st.write("Chiều:", r.get("afternoon", ""))
+                st.write("Tối:", r.get("evening", ""))
+                logger.info(f"Hiển thị lịch trình ngày {r['day']}")
+
+# ============================
+# HÀM HIỂN THỊ KHÁCH SẠN
+# ============================
+def show_hotels():
+    st.header("🏨 Thông tin khách sạn")
+    df_hotels = pd.DataFrame(hotels)
+
     if df_hotels.empty:
-        st.info('Chưa có khách sạn. Hãy dán `hotels` vào phần DỮ LIỆU ở đầu file.')
+        st.info("Chưa có dữ liệu khách sạn.")
+        logger.warning("Không có dữ liệu khách sạn.")
     else:
         df_h = df_hotels.copy()
-        if hotel_search:
-            df_h = df_h[df_h['name'].str.contains(hotel_search, case=False, na=False)]
-        df_h = df_h.rename(columns={'name':'Tên khách sạn','checkin':'Ngày Check-in','checkout':'Ngày Check-out','phone':'SĐT liên hệ','notes':'Ghi chú'})
-        df_h_display = df_h[['Tên khách sạn','Ngày Check-in','Ngày Check-out','SĐT liên hệ','Ghi chú']].copy()
-        df_h_display.index = df_h_display.index + 1
-        st.dataframe(df_h_display.reset_index(drop=True))
+        df_h.index = range(1, len(df_h) + 1)
+        df_h.index.name = "STT"
+        st.dataframe(df_h.rename(columns={"name": "Tên khách sạn", "checkin": "Check-in", "checkout": "Check-out", "phone": "SĐT liên hệ", "notes": "Ghi chú"}))
+        logger.info("Hiển thị danh sách khách sạn.")
 
-if 'Tàu hoả' in show_section:
-    st.header('Thông tin tàu hoả')
-    st.subheader('Tàu đi (đến Nha Trang)')
-    if df_trains_to.empty:
-        st.write('Không có thông tin tàu đi.')
-    else:
-        df_tt = df_trains_to.copy()
-        if train_search:
-            df_tt = df_tt[df_tt['train_no'].str.contains(train_search, case=False, na=False)]
-        df_tt = df_tt.rename(columns={'train_no':'Số hiệu tàu','dep_time':'Giờ khởi hành','arr_time':'Giờ đến'})
-        df_tt.index = df_tt.index + 1
-        st.table(df_tt.reset_index(drop=True))
+# ============================
+# HÀM HIỂN THỊ TÀU HỎA
+# ============================
+def show_trains():
+    st.header("🚆 Thông tin tàu hỏa")
+    df_trains = pd.DataFrame([trains["depart"], trains["return"]], index=["Chuyến đi", "Chuyến về"])
+    st.dataframe(df_trains.rename(columns={"train_no": "Số hiệu tàu", "depart_time": "Thời gian khởi hành", "arrive_time": "Thời gian đến"}))
+    logger.info("Hiển thị thông tin tàu hỏa.")
 
-    st.subheader('Tàu về (về Sài Gòn)')
-    if df_trains_back.empty:
-        st.write('Không có thông tin tàu về.')
-    else:
-        df_tb = df_trains_back.copy()
-        if train_search:
-            df_tb = df_tb[df_tb['train_no'].str.contains(train_search, case=False, na=False)]
-        df_tb = df_tb.rename(columns={'train_no':'Số hiệu tàu','dep_time':'Giờ khởi hành','arr_time':'Giờ đến'})
-        df_tb.index = df_tb.index + 1
-        st.table(df_tb.reset_index(drop=True))
+# ============================
+# APP CHÍNH
+# ============================
+def main():
+    st.set_page_config(page_title="Tra cứu Nhật ký & Kế hoạch Nha Trang", layout="wide")
+    st.title("📒 Tra cứu Nhật ký & Kế hoạch Du lịch Nha Trang")
 
-st.markdown('---')
-st.caption('Ứng dụng read-only — chỉnh dữ liệu trực tiếp trong file Python (các biến ở đầu file).')
+    # Hiển thị popup cảnh báo
+    show_popup_notice()
 
-# END
+    # Sidebar
+    st.sidebar.header("🔍 Bộ lọc & Mục tra cứu")
+    show_section = st.sidebar.multiselect(
+        "Chọn phần muốn xem:",
+        ["Nhật ký", "Thông tin chung", "Lịch trình", "Khách sạn", "Tàu hỏa"],
+        default=["Nhật ký"]
+    )
+
+    # Gọi các hàm theo lựa chọn
+    if "Nhật ký" in show_section:
+        show_diary()
+    if "Thông tin chung" in show_section:
+        show_meta()
+    if "Lịch trình" in show_section:
+        show_itinerary()
+    if "Khách sạn" in show_section:
+        show_hotels()
+    if "Tàu hỏa" in show_section:
+        show_trains()
+
+# ============================
+# CHẠY APP
+# ============================
+if __name__ == "__main__":
+    main()
