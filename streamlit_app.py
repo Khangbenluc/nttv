@@ -8,6 +8,7 @@ Streamlit app (read-only) để tra cứu nhật kí du lịch và kế hoạch 
 Yêu cầu cập nhật:
 - Hiển thị số thứ tự bắt đầu từ 1 (không phải 0).
 - Tên cột rõ ràng trong bảng hiển thị.
+- Fix lỗi IndexError khi bộ lọc trả về 0 kết quả (sử dụng số thứ tự để xem chi tiết).
 """
 
 import streamlit as st
@@ -139,6 +140,7 @@ if 'Nhật ký' in show_section:
         st.info('Chưa có mục nhật ký. Hãy dán danh sách `diary_entries` vào phần DỮ LIỆU ở đầu file.')
     else:
         filtered = df_diary.copy()
+        # Áp dụng khoảng ngày (nếu người dùng thay đổi)
         try:
             if diary_date_min and diary_date_max and isinstance(diary_date_min, (list, tuple)):
                 dmin, dmax = diary_date_min
@@ -148,23 +150,34 @@ if 'Nhật ký' in show_section:
                 filtered = filtered[(filtered['date_only'] >= dmin) & (filtered['date_only'] <= dmax)]
         except Exception:
             pass
+        # Tìm theo từ khoá
         if text_search:
             filtered = filtered[filtered['activity'].str.contains(text_search, case=False, na=False)]
 
         st.write(f'Hiển thị {len(filtered)} kết quả')
-        df_display = filtered[['date','time','activity']].sort_values(['date','time']).reset_index(drop=True)
-        df_display.index = df_display.index + 1  # STT từ 1
-        df_display = df_display.rename(columns={'date':'Ngày','time':'Thời gian','activity':'Hoạt động/Địa điểm'})
-        st.dataframe(df_display)
 
-        with st.expander('Xem chi tiết theo mục'):
-            idx = st.number_input('Chọn số thứ tự (STT, bắt đầu từ 1)', min_value=1, max_value=max(1, len(df_display)), value=1)
-            row = df_display.iloc[int(idx)-1]
-            st.write('**Ngày:**', row['Ngày'])
-            st.write('**Thời gian:**', row['Thời gian'])
-            st.write('**Hoạt động/Địa điểm:**', row['Hoạt động/Địa điểm'])
-            if 'datetime' in filtered.columns and not pd.isna(filtered.iloc[int(idx)-1]['datetime']):
-                st.write('**Giờ VN:**', filtered.iloc[int(idx)-1]['datetime'].strftime("%Y-%m-%d %H:%M %Z%z"))
+        # Nếu không có kết quả thì không hiển thị number_input để tránh out-of-bounds
+        if filtered.empty:
+            # Hiển thị bảng rỗng với tên cột rõ ràng
+            empty_df = pd.DataFrame(columns=['Ngày', 'Thời gian', 'Hoạt động/Địa điểm'])
+            st.dataframe(empty_df)
+            st.info('Không có kết quả khớp với bộ lọc.')
+        else:
+            # Sắp xếp và tạo bảng hiển thị (STT bắt đầu từ 1)
+            filtered_sorted = filtered.sort_values(['date','time']).reset_index(drop=True)
+            df_display = filtered_sorted[['date','time','activity']].copy()
+            df_display = df_display.rename(columns={'date':'Ngày','time':'Thời gian','activity':'Hoạt động/Địa điểm'})
+            df_display.index = df_display.index + 1
+            st.dataframe(df_display)
+
+            # Chọn STT (1-based) — đúng giới hạn
+            idx = st.number_input('Chọn số thứ tự (STT, bắt đầu từ 1)', min_value=1, max_value=len(df_display), value=1)
+            sel = filtered_sorted.iloc[int(idx)-1]
+            st.write('**Ngày:**', sel['date'])
+            st.write('**Thời gian:**', sel['time'])
+            st.write('**Hoạt động/Địa điểm:**', sel['activity'])
+            if 'datetime' in filtered_sorted.columns and not pd.isna(sel.get('datetime')):
+                st.write('**Giờ VN:**', sel['datetime'].strftime("%Y-%m-%d %H:%M %Z%z"))
 
 if 'Lịch trình' in show_section:
     st.header('Lịch trình chi tiết')
@@ -194,8 +207,9 @@ if 'Khách sạn' in show_section:
         if hotel_search:
             df_h = df_h[df_h['name'].str.contains(hotel_search, case=False, na=False)]
         df_h = df_h.rename(columns={'name':'Tên khách sạn','checkin':'Ngày Check-in','checkout':'Ngày Check-out','phone':'SĐT liên hệ','notes':'Ghi chú'})
-        df_h.index = df_h.index + 1
-        st.dataframe(df_h[['Tên khách sạn','Ngày Check-in','Ngày Check-out','SĐT liên hệ','Ghi chú']].reset_index(drop=True))
+        df_h_display = df_h[['Tên khách sạn','Ngày Check-in','Ngày Check-out','SĐT liên hệ','Ghi chú']].copy()
+        df_h_display.index = df_h_display.index + 1
+        st.dataframe(df_h_display.reset_index(drop=True))
 
 if 'Tàu hoả' in show_section:
     st.header('Thông tin tàu hoả')
@@ -208,7 +222,7 @@ if 'Tàu hoả' in show_section:
             df_tt = df_tt[df_tt['train_no'].str.contains(train_search, case=False, na=False)]
         df_tt = df_tt.rename(columns={'train_no':'Số hiệu tàu','dep_time':'Giờ khởi hành','arr_time':'Giờ đến'})
         df_tt.index = df_tt.index + 1
-        st.table(df_tt)
+        st.table(df_tt.reset_index(drop=True))
 
     st.subheader('Tàu về (về Sài Gòn)')
     if df_trains_back.empty:
@@ -219,7 +233,7 @@ if 'Tàu hoả' in show_section:
             df_tb = df_tb[df_tb['train_no'].str.contains(train_search, case=False, na=False)]
         df_tb = df_tb.rename(columns={'train_no':'Số hiệu tàu','dep_time':'Giờ khởi hành','arr_time':'Giờ đến'})
         df_tb.index = df_tb.index + 1
-        st.table(df_tb)
+        st.table(df_tb.reset_index(drop=True))
 
 st.markdown('---')
 st.caption('Ứng dụng read-only — chỉnh dữ liệu trực tiếp trong file Python (các biến ở đầu file).')
