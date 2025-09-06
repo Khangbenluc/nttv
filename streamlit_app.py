@@ -119,11 +119,18 @@ def show_diary():
 # ============================
 def show_meta():
     st.header("ℹ️ Thông tin chung chuyến đi")
-    st.write(f"**Địa điểm:** {trip_meta['location']}")
-    st.write(f"**Số ngày:** {trip_meta['days']}")
-    st.write(f"**Số người:** {trip_meta['people']}")
-    st.write(f"**Chủ đề:** {trip_meta['theme']}")
-    logger.info("Hiển thị thông tin chung chuyến đi.")
+
+    # Địa điểm
+    st.markdown(f"<h2 style='color:#2E86C1;'>{trip_meta['location']}</h2>", unsafe_allow_html=True)
+
+    # Số ngày
+    st.write(f"📅 **Số ngày:** {trip_meta['days']}")
+
+    # Số người (dùng metric để giống chỉ số)
+    st.metric(label="👥 Số người đi", value=trip_meta['people'])
+
+    # Chủ đề
+    st.markdown(f"<i style='color:#27AE60;'>Chủ đề: {trip_meta['theme']}</i>", unsafe_allow_html=True)
 
 # ============================
 # HÀM HIỂN THỊ LỊCH TRÌNH
