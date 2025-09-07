@@ -162,7 +162,7 @@ def show_center_popup():
         st.components.v1.html(popup_html, height=320, width=None)
 
         # detect hash change to mark closed (user may close via button)
-        if st.query_params().get('popup_closed') or st.experimental_get_query_params().get('popup') == ['closed']:
+        if st.experimental_get_query_params().get('popup_closed') or st.experimental_get_query_params().get('popup') == ['closed']:
             st.session_state['notice_shown'] = True
         # Also allow manual close via a small Streamlit button below the embedded html
         colc = st.columns([1,2,1])
