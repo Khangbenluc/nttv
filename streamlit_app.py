@@ -132,7 +132,42 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helv
 # ---------------------------------
 def show_center_popup():
     if 'notice_shown' not in st.session_state:
+        st.session_state['notice_shown'] = Falsedef show_center_popup():
+    if 'notice_shown' not in st.session_state:
         st.session_state['notice_shown'] = False
+
+    if not st.session_state['notice_shown']:
+        popup_html = textwrap.dedent('''
+        <div class="popup-center" id="center-popup">
+          <div style="background:white; padding:26px; border-radius:12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); max-width:480px; text-align:center;">
+            <h3 style="color:#b91c1c; margin:0 0 10px 0;">⚠️ Thông báo</h3>
+            <p style="margin:0; font-size:14px; color:#374151;">Trang web đang trong quá trình hoàn thiện. Dữ liệu hiện tại là thử nghiệm.</p>
+            <div style="margin-top:18px; display:flex; justify-content:center; gap:12px;">
+              <button onclick="window.parent.postMessage({type:'popup_close'}, '*');" 
+                      style="padding:8px 18px; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer;">
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+        <script>
+        window.addEventListener('message', (event) => {
+          if (event.data.type === 'popup_close') {
+            const popup = document.getElementById('center-popup');
+            if (popup) popup.style.display = 'none';
+            // báo cho streamlit
+            window.parent.postMessage({isStreamlitMessage: true, type: 'popup_closed'}, '*');
+          }
+        });
+        </script>
+        ''')
+        st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
+        st.components.v1.html(popup_html, height=320, width=None)
+
+        # xử lý sự kiện popup_closed từ frontend
+        if st.session_state.get('popup_closed_flag', False):
+            st.session_state['notice_shown'] = True
+
 
     # Hiển thị popup _một lần_ mỗi phiên nếu chưa đóng
     if not st.session_state.get('notice_shown', False):
@@ -165,13 +200,7 @@ def show_center_popup():
         q = st.query_params
         if q.get('popup_closed') or q.get('popup') == ['closed']:
             st.session_state['notice_shown'] = True
-        # Also allow manual close via a small Streamlit button below the embedded html
-        colc = st.columns([1,2,1])
-        with colc[1]:
-            if st.button('Đóng thông báo'):
-                st.session_state['notice_shown'] = True
-                # minimal logger
-                logger.info('User closed popup via Streamlit button')
+
 
 # ---------------------------------
 # BUILD DATAFRAMES & SAFE VIEWS
@@ -392,7 +421,7 @@ def app_main():
         """, unsafe_allow_html=True)
     with col2:
         if st.button('Tải lại trang'):
-            st.experimental_rerun()
+            st.rerun()
 
     st.markdown('---')
 
