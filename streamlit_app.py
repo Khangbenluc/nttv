@@ -350,7 +350,7 @@ def app_main():
         </div>
         """, unsafe_allow_html=True)
     with col2:
-        if st.button('Tải lại trang',type=primary):
+        if st.button('Tải lại trang',type="primary"):
             st.rerun()
 
     st.markdown('---')
