@@ -96,7 +96,7 @@ itinerary = [
 # Khách sạn (có nhiều mẫu)
 hotels = [
     {'name':'Vesna Hotel Nha Trang','checkin':'2025-08-02','checkout':'2025-08-04','phone':'+84 258 3885 858','notes':'Khách sạn chính,gần biển'},
-    {'name':'Khách Sạn Thái Bình Nha Trang','checkin':'2025-08-01','checkout':'2025-08-01','phone':'-','notes':'Ở tạm,gần ga Nha Trang'},
+    {'name':'Khách Sạn Thái Bình Nha Trang','checkin':'2025-08-04','checkout':'2025-08-04','phone':'Chưa có thông tin','notes':'Ở tạm,gần ga Nha Trang'},
 ]
 
 # Tàu hoả thông tin (nhiều chuyến để demo)
