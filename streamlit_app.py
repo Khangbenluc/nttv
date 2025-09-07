@@ -328,7 +328,7 @@ def app_main():
             </div>
             <div>
                 <div style='font-size:20px; font-weight:800;'>Nhật ký & Kế hoạch — Nha Trang</div>
-                <div class='small-muted'>Tra cứu thông tin về chuyến đi nha trang tại đây.</div>
+                <div class='small-muted'>Tra cứu thông tin về chuyến đi Nha Trang tại đây.</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -341,6 +341,7 @@ def app_main():
     # sidebar navigation
     st.sidebar.title('Điều hướng')
     nav = st.sidebar.radio('Phần', ['Tổng quan', 'Nhật ký', 'Lịch trình', 'Khách sạn', 'Tàu hỏa'], index=0)
+    st.markdown('Chọn một phần để xem')
 
     # build dataframes
     df_diary = build_diary_df(diary_entries)
