@@ -132,7 +132,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helv
 # ---------------------------------
 def show_center_popup():
     if 'notice_shown' not in st.session_state:
-        st.session_state['notice_shown'] = Falsedef show_center_popup():
+        st.session_state['notice_shown'] = Falsedef show_center_popup()
     if 'notice_shown' not in st.session_state:
         st.session_state['notice_shown'] = False
 
