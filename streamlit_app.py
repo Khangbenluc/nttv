@@ -4,7 +4,7 @@ Streamlit Read-only App: Tra cứu Nhật ký & Kế hoạch Du lịch Nha Trang
 HƯỚNG DẪN NGẮN:
 - App chỉ đọc (read-only). Bạn sửa dữ liệu bằng cách chỉnh các biến ở "DỮ LIỆU MẪU" phía đầu file.
 - Chạy bằng `streamlit run app_nhatrang_lookup.py`.
-- Popup thông báo xuất hiện khi vào trang (giữa màn hình). Bạn có thể đóng popup — nội dung trang sẽ nhích lên ngay.
+
 
 Nội dung file đã được mở rộng với nhiều mẫu dữ liệu để bạn dễ demo/copy.
 """
@@ -134,41 +134,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial
 </style>
 """
 
-# ---------------------------------
-# POPUP (GIỮ NGUYÊN: NỔI GIỮA, KHÔNG NỀN MỜ, CÓ NÚT BÊN TRONG)
-# Khi nhấn Đóng (JS) popup ẩn đi — phần trang phía sau sẽ nhích lên.
-# ---------------------------------
-
-def show_center_popup():
-    # show once per page load unless user closes via JS button (hides DOM element)
-    # we rely on the JS button to hide the popup; we do not persist state across reloads
-    popup_html = textwrap.dedent('''
-    <div class="popup-center" id="center-popup">
-      <div style="background:white; padding:26px; border-radius:12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); max-width:520px; text-align:center;">
-        <h3 style="color:#b91c1c; margin:0 0 10px 0;">⚠️ Thông báo</h3>
-        <p style="margin:0 0 8px 0; font-size:14px; color:#374151;">Trang web đang trong quá trình hoàn thiện. Dữ liệu hiện tại là thử nghiệm.</p>
-        <p style="margin:0; font-size:13px; color:#6b7280;">Bạn có thể đóng thông báo này để tiếp tục xem nội dung.</p>
-        <div style="margin-top:18px; display:flex; justify-content:center; gap:12px;">
-          <button id="close-popup-btn" style="padding:10px 20px; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer;">Đóng</button>
-        </div>
-      </div>
-    </div>
-    <script>
-    (function(){
-      const btn = document.getElementById('close-popup-btn');
-      if (btn){
-        btn.addEventListener('click', function(){
-          const elm = document.getElementById('center-popup');
-          if (elm) elm.style.display = 'none';
-        });
-      }
-    })();
-    </script>
-    ''')
-
-    st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
-    # embed at top so popup sits above Streamlit content; width=None lets iframe use page width
-    st.components.v1.html(popup_html, height=360, width=None)
 
 # ---------------------------------
 # BUILD DATAFRAMES
@@ -353,8 +318,6 @@ def show_trains_ui(df_to, df_back):
 def app_main():
     st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
-    # popup xuất hiện ở ngay đầu
-    show_center_popup()
 
     # header
     col1,col2 = st.columns([3,1])
