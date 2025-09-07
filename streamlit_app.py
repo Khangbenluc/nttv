@@ -1,18 +1,12 @@
 """
 Streamlit Read-only App: Tra cứu Nhật ký & Kế hoạch Du lịch Nha Trang
 
-Yêu cầu của app:
-- Chỉ tra cứu (read-only). Người dùng thay dữ liệu trong file (các biến ở đầu file).
-- Hiển thị giờ VN (Asia/Ho_Chi_Minh) cho các mục nhật ký.
-- Popup thông báo chính giữa (không nền mờ) có nút Đóng.
-- STT bắt đầu từ 1; tên cột rõ ràng.
-- Giao diện (UI) đẹp, thân thiện, responsive.
-- Không có chức năng thêm/sửa/xóa dữ liệu.
+HƯỚNG DẪN NGẮN:
+- App chỉ đọc (read-only). Bạn sửa dữ liệu bằng cách chỉnh các biến ở "DỮ LIỆU MẪU" phía đầu file.
+- Chạy bằng `streamlit run app_nhatrang_lookup.py`.
+- Popup thông báo xuất hiện khi vào trang (giữa màn hình). Bạn có thể đóng popup — nội dung trang sẽ nhích lên ngay.
 
-Hướng dẫn:
-- Chỉnh `diary_entries`, `trip_meta`, `itinerary`, `hotels`, `trains` ở phần DỮ LIỆU MẪU.
-- Chạy: `streamlit run app_nhatrang_lookup.py`
-
+Nội dung file đã được mở rộng với nhiều mẫu dữ liệu để bạn dễ demo/copy.
 """
 
 # ---------------------------------
@@ -26,7 +20,7 @@ import logging
 import textwrap
 
 # ---------------------------------
-# LOGGING (mặc định INFO) - bạn có thể đổi level để debug
+# LOGGING
 # ---------------------------------
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('nhatrang_lookup')
@@ -38,45 +32,63 @@ logger.setLevel(logging.INFO)
 st.set_page_config(page_title="Tra cứu Nhật ký & Kế hoạch - Nha Trang", layout="wide", initial_sidebar_state='expanded')
 
 # ---------------------------------
-# DỮ LIỆU MẪU (CHỈNH TẠI ĐÂY)
-# Thay hoặc dán dữ liệu giấy nhật ký của bạn vào các cấu trúc bên dưới.
+# DỮ LIỆU MẪU (NHIỀU MẪU ĐỂ DEMO)
+# Bạn có thể thay toàn bộ danh sách bằng dữ liệu thật của bạn.
 # ---------------------------------
 
-# diary_entries: list of dicts: { 'date': 'YYYY-MM-DD', 'time': 'HH:MM', 'activity': '...' }
+# Nhật ký (diary_entries)
+# Mỗi mục: {'date': 'YYYY-MM-DD', 'time': 'HH:MM', 'activity': '...'}
 diary_entries = [
-    {'date': '2025-08-20', 'time': '08:30', 'activity': 'Ăn sáng tại quán Bánh Căn Phan Rang - check-in resort'},
-    {'date': '2025-08-20', 'time': '13:00', 'activity': 'Tham quan Tháp Bà Ponagar'},
-    {'date': '2025-08-21', 'time': '09:00', 'activity': 'Lặn ngắm san hô (đi tàu ra Hòn Mun)'},
-    {'date': '2025-08-22', 'time': '19:00', 'activity': 'Dạo chợ đêm Nha Trang'},
+    {'date':'2025-08-18','time':'07:30','activity':'Khởi hành từ Sài Gòn - ga Sài Gòn'},
+    {'date':'2025-08-18','time':'12:20','activity':'Ăn trưa trên đường'},
+    {'date':'2025-08-18','time':'17:45','activity':'Đến Nha Trang - check-in khách sạn Sunrise'},
+    {'date':'2025-08-19','time':'08:00','activity':'Ăn sáng tại quán địa phương'},
+    {'date':'2025-08-19','time':'10:00','activity':'Tham quan Viện Hải Dương học'},
+    {'date':'2025-08-19','time':'13:00','activity':'Ăn trưa - thử bún chả cá'},
+    {'date':'2025-08-19','time':'15:00','activity':'Thư giãn tại bãi biển Trần Phú'},
+    {'date':'2025-08-20','time':'07:00','activity':'Lên tàu đi Hòn Mun - lặn ngắm san hô'},
+    {'date':'2025-08-20','time':'13:30','activity':'Thăm Tháp Bà Ponagar'},
+    {'date':'2025-08-20','time':'19:30','activity':'Dạo chợ đêm Nha Trang - ăn hải sản'},
+    {'date':'2025-08-21','time':'09:00','activity':'Tham quan chùa Long Sơn'},
+    {'date':'2025-08-21','time':'12:00','activity':'Ăn trưa - nem nướng'},
+    {'date':'2025-08-21','time':'16:00','activity':'Mua quà lưu niệm tại chợ Xóm Mới'},
+    {'date':'2025-08-22','time':'08:30','activity':'Trả phòng, chuẩn bị về Sài Gòn'},
+    {'date':'2025-08-22','time':'11:00','activity':'Lên tàu trở về'},
 ]
 
-# trip_meta: thông tin chung chuyến đi
+# Thông tin chung chuyến đi
 trip_meta = {
     'destination': 'Nha Trang',
-    'num_days': 3,
-    'num_people': 2,
-    'theme': 'Biển - Ẩm thực - Thư giãn',
+    'num_days': 5,
+    'num_people': 3,
+    'theme': 'Biển - Ẩm thực - Khám phá',
 }
 
-# itinerary: list of dicts: { 'day': int, 'morning': str, 'afternoon': str, 'evening': str }
+# Lịch trình chi tiết mỗi ngày
 itinerary = [
-    {'day': 1, 'morning': 'Đến Nha Trang, nhận phòng khách sạn', 'afternoon': '-', 'evening': 'Dạo biển, ăn tối'},
-    {'day': 2, 'morning': 'Hòn Mun - lặn biển', 'afternoon': 'VinWonders (nếu thích)', 'evening': '-'},
-    {'day': 3, 'morning': 'Tháp Bà Ponagar', 'afternoon': 'Trở về', 'evening': '-'},
+    {'day':1, 'morning':'Khởi hành, đi tàu SE8', 'afternoon':'Nhận phòng, ăn trưa', 'evening':'Dạo bờ biển, ăn tối đại dương'},
+    {'day':2, 'morning':'Viện Hải Dương học', 'afternoon':'Thưởng thức đặc sản địa phương', 'evening':'Chợ đêm'},
+    {'day':3, 'morning':'Tàu ra Hòn Mun - lặn biển', 'afternoon':'Thư giãn trên đảo', 'evening':'BBQ hải sản'},
+    {'day':4, 'morning':'Tháp Bà Ponagar và chùa Long Sơn', 'afternoon':'Mua sắm quà', 'evening':'Xem biểu diễn âm nhạc đường phố'},
+    {'day':5, 'morning':'Trả phòng', 'afternoon':'Lên tàu về Sài Gòn', 'evening':'-'},
 ]
 
-# hotels: list of dicts: { 'name','checkin','checkout','phone','notes' }
+# Khách sạn (có nhiều mẫu)
 hotels = [
-    {'name': 'Seaside Resort', 'checkin': '2025-08-20', 'checkout': '2025-08-23', 'phone': '+84 258 3xxxxxx', 'notes': 'Phòng view biển'},
+    {'name':'Sunrise Nha Trang','checkin':'2025-08-18','checkout':'2025-08-22','phone':'+84 912 345 678','notes':'Phòng 2 giường, view biển'},
+    {'name':'Seaside Resort','checkin':'2025-08-20','checkout':'2025-08-21','phone':'+84 258 3xxxxxx','notes':'Đặt qua app, có bữa sáng'},
 ]
 
-# trains: dict with 'to_nhatrang' and 'to_saigon' lists
+# Tàu hoả thông tin (nhiều chuyến để demo)
 trains = {
     'to_nhatrang': [
-        {'train_no': 'SE2', 'dep_time': '06:00', 'arr_time': '11:30'},
+        {'train_no':'SE8','dep_time':'06:00','arr_time':'12:45'},
+        {'train_no':'SE2','dep_time':'07:30','arr_time':'14:20'},
+        {'train_no':'TN1','dep_time':'09:00','arr_time':'15:50'},
     ],
     'to_saigon': [
-        {'train_no': 'SE5', 'dep_time': '14:00', 'arr_time': '19:30'},
+        {'train_no':'SE7','dep_time':'18:00','arr_time':'00:40'},
+        {'train_no':'SE5','dep_time':'20:00','arr_time':'02:40'},
     ]
 }
 
@@ -87,9 +99,9 @@ VN_TZ = pytz.timezone('Asia/Ho_Chi_Minh')
 DATE_FMT = '%Y-%m-%d'
 DATETIME_FMT = '%Y-%m-%d %H:%M'
 
-# helper: parse date/time to timezone-aware datetime (VN)
+
 def parse_datetime(date_str, time_str=None):
-    """Trả về datetime có timezone Asia/Ho_Chi_Minh nếu parse được, ngược lại None."""
+    """Parse date and optional time into timezone-aware datetime (VN)."""
     try:
         if time_str and isinstance(time_str, str) and time_str.strip():
             dt = datetime.strptime(f"{date_str} {time_str}", DATETIME_FMT)
@@ -100,24 +112,19 @@ def parse_datetime(date_str, time_str=None):
         logger.debug(f'parse_datetime failed for ({date_str}, {time_str}): {e}')
         return None
 
-# helper: safe get for dicts
-def safe_get(d, k, default=''):
-    return d.get(k, default) if isinstance(d, dict) else default
 
-# helper: pretty truncate
-def short(text, max_len=120):
+def short(text, max_len=140):
     if text is None:
         return ''
-    text = str(text)
-    return text if len(text) <= max_len else text[:max_len-3] + '...'
+    s = str(text)
+    return s if len(s) <= max_len else s[:max_len-3] + '...'
 
 # ---------------------------------
-# UI: CSS global (tạo style đẹp)
+# GLOBAL CSS (UI đẹp)
 # ---------------------------------
 GLOBAL_CSS = """
 <style>
-/* Fonts and containers */
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial; }
 .section-card { background: linear-gradient(180deg, #ffffff, #fbfbff); border-radius: 12px; padding: 16px; box-shadow: 0 8px 20px rgba(16,24,40,0.06); margin-bottom: 16px; }
 .card-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
 .small-muted { color: #6b7280; font-size: 13px; }
@@ -128,93 +135,52 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helv
 """
 
 # ---------------------------------
-# SHOW POPUP (GIỮ NGUYÊN NHƯ YÊU CẦU) - giữa màn hình, không nền mờ
+# POPUP (GIỮ NGUYÊN: NỔI GIỮA, KHÔNG NỀN MỜ, CÓ NÚT BÊN TRONG)
+# Khi nhấn Đóng (JS) popup ẩn đi — phần trang phía sau sẽ nhích lên.
 # ---------------------------------
+
 def show_center_popup():
-    if 'notice_shown' not in st.session_state:
-        st.session_state['notice_shown'] = Falsedef show_center_popup()
-    if 'notice_shown' not in st.session_state:
-        st.session_state['notice_shown'] = False
-
-    if not st.session_state['notice_shown']:
-        popup_html = textwrap.dedent('''
-        <div class="popup-center" id="center-popup">
-          <div style="background:white; padding:26px; border-radius:12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); max-width:480px; text-align:center;">
-            <h3 style="color:#b91c1c; margin:0 0 10px 0;">⚠️ Thông báo</h3>
-            <p style="margin:0; font-size:14px; color:#374151;">Trang web đang trong quá trình hoàn thiện. Dữ liệu hiện tại là thử nghiệm.</p>
-            <div style="margin-top:18px; display:flex; justify-content:center; gap:12px;">
-              <button onclick="window.parent.postMessage({type:'popup_close'}, '*');" 
-                      style="padding:8px 18px; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer;">
-                Đóng
-              </button>
-            </div>
-          </div>
+    # show once per page load unless user closes via JS button (hides DOM element)
+    # we rely on the JS button to hide the popup; we do not persist state across reloads
+    popup_html = textwrap.dedent('''
+    <div class="popup-center" id="center-popup">
+      <div style="background:white; padding:26px; border-radius:12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); max-width:520px; text-align:center;">
+        <h3 style="color:#b91c1c; margin:0 0 10px 0;">⚠️ Thông báo</h3>
+        <p style="margin:0 0 8px 0; font-size:14px; color:#374151;">Trang web đang trong quá trình hoàn thiện. Dữ liệu hiện tại là thử nghiệm.</p>
+        <p style="margin:0; font-size:13px; color:#6b7280;">Bạn có thể đóng thông báo này để tiếp tục xem nội dung.</p>
+        <div style="margin-top:18px; display:flex; justify-content:center; gap:12px;">
+          <button id="close-popup-btn" style="padding:10px 20px; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer;">Đóng</button>
         </div>
-        <script>
-        window.addEventListener('message', (event) => {
-          if (event.data.type === 'popup_close') {
-            const popup = document.getElementById('center-popup');
-            if (popup) popup.style.display = 'none';
-            // báo cho streamlit
-            window.parent.postMessage({isStreamlitMessage: true, type: 'popup_closed'}, '*');
-          }
+      </div>
+    </div>
+    <script>
+    (function(){
+      const btn = document.getElementById('close-popup-btn');
+      if (btn){
+        btn.addEventListener('click', function(){
+          const elm = document.getElementById('center-popup');
+          if (elm) elm.style.display = 'none';
         });
-        </script>
-        ''')
-        st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
-        st.components.v1.html(popup_html, height=320, width=None)
+      }
+    })();
+    </script>
+    ''')
 
-        # xử lý sự kiện popup_closed từ frontend
-        if st.session_state.get('popup_closed_flag', False):
-            st.session_state['notice_shown'] = True
-
-
-    # Hiển thị popup _một lần_ mỗi phiên nếu chưa đóng
-    if not st.session_state.get('notice_shown', False):
-        popup_html = textwrap.dedent('''
-        <div class="popup-center" id="center-popup">
-          <div style="background:white; padding:26px; border-radius:12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); max-width:480px; text-align:center;">
-            <h3 style="color:#b91c1c; margin:0 0 10px 0;">⚠️ Thông báo</h3>
-            <p style="margin:0; font-size:14px; color:#374151;">Trang web đang trong quá trình hoàn thiện. Dữ liệu hiện tại là thử nghiệm.</p>
-            <div style="margin-top:18px; display:flex; justify-content:center; gap:12px;">
-              <button id="close-popup-btn" style="padding:8px 18px; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer;">Đóng</button>
-            </div>
-          </div>
-        </div>
-        <script>
-        const btn = window.parent.document.querySelector('#root').querySelector('#close-popup-btn');
-        // Note: query into parent may not work in all Streamlit setups. We use local button handler below.
-        document.getElementById('close-popup-btn').addEventListener('click', function(){
-            const elm = document.getElementById('center-popup');
-            if (elm) elm.style.display = 'none';
-            // also set a visible flag into Streamlit via hash change (simple hack)
-            location.hash = '#popup_closed';
-        });
-        </script>
-        ''')
-        st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
-        # embed full-width so popup appears centered in iframe; width=None lets Streamlit use available width
-        st.components.v1.html(popup_html, height=320, width=None)
-
-        # detect hash change to mark closed (user may close via button)
-        q = st.query_params
-        if q.get('popup_closed') or q.get('popup') == ['closed']:
-            st.session_state['notice_shown'] = True
-
+    st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
+    # embed at top so popup sits above Streamlit content; width=None lets iframe use page width
+    st.components.v1.html(popup_html, height=360, width=None)
 
 # ---------------------------------
-# BUILD DATAFRAMES & SAFE VIEWS
+# BUILD DATAFRAMES
 # ---------------------------------
 
 def build_diary_df(entries):
     df = pd.DataFrame(entries)
     if df.empty:
         return df
-    # ensure columns exist
-    for c in ['date', 'time', 'activity']:
+    for c in ['date','time','activity']:
         if c not in df.columns:
             df[c] = ''
-    # parse datetime
     df['datetime_vn'] = df.apply(lambda r: parse_datetime(r['date'], r['time']), axis=1)
     df['date_only'] = pd.to_datetime(df['date'], errors='coerce').dt.date
     return df
@@ -222,7 +188,6 @@ def build_diary_df(entries):
 
 def build_itin_df(itins):
     df = pd.DataFrame(itins)
-    # ensure columns exist
     for c in ['day','morning','afternoon','evening']:
         if c not in df.columns:
             df[c] = ''
@@ -238,7 +203,6 @@ def build_hotels_df(hlist):
 
 
 def build_trains_df(tr):
-    # returns two DataFrames
     to_df = pd.DataFrame(tr.get('to_nhatrang', []))
     back_df = pd.DataFrame(tr.get('to_saigon', []))
     for d in [to_df, back_df]:
@@ -248,30 +212,27 @@ def build_trains_df(tr):
     return to_df, back_df
 
 # ---------------------------------
-# UI SECTION: components for each part
+# UI: từng phần (giữ logic code đầu tiên)
 # ---------------------------------
 
 def show_overview(meta):
-    """Hiển thị ô tổng quan đẹp mắt: destination, days, people, theme"""
-    with st.container():
-        st.markdown("<div class='section-card'>", unsafe_allow_html=True)
-        cols = st.columns([2,1,1,2])
-        with cols[0]:
-            st.markdown(f"<div style='font-size:22px; font-weight:800; color:#0f172a;'>{meta.get('destination','-')}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='small-muted'>Địa điểm</div>")
-        with cols[1]:
-            st.metric(label='Số ngày', value=meta.get('num_days','-'))
-        with cols[2]:
-            st.metric(label='Số người', value=meta.get('num_people','-'))
-        with cols[3]:
-            st.markdown(f"<div style='text-align:right;'><div class='small-muted'>Chủ đề</div><div style='font-style:italic'>{meta.get('theme','-')}</div></div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+    cols = st.columns([2,1,1,2])
+    with cols[0]:
+        st.markdown(f"<div style='font-size:22px; font-weight:800; color:#0f172a;'>{meta.get('destination','-')}</div>", unsafe_allow_html=True)
+        st.markdown("<div class='small-muted'>Địa điểm</div>")
+    with cols[1]:
+        st.metric(label='Số ngày', value=meta.get('num_days','-'))
+    with cols[2]:
+        st.metric(label='Số người', value=meta.get('num_people','-'))
+    with cols[3]:
+        st.markdown(f"<div style='text-align:right;'><div class='small-muted'>Chủ đề</div><div style='font-style:italic'>{meta.get('theme','-')}</div></div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def show_diary_ui(df_diary):
-    st.subheader('Nhật ký (Diary)')
-    # filters row
-    c1, c2, c3 = st.columns([1,2,1])
+    st.header('Nhật ký (Diary)')
+    c1,c2,c3 = st.columns([1,2,1])
     with c1:
         date_range = None
         if not df_diary.empty:
@@ -287,16 +248,14 @@ def show_diary_ui(df_diary):
         kw = st.text_input('Tìm theo từ khoá (hoạt động/địa điểm)')
     with c3:
         st.write('')
-        st.write('')
         if st.button('Làm mới bộ lọc'):
             logger.info('User reset diary filters')
 
-    # apply filters
     filtered = df_diary.copy() if not df_diary.empty else df_diary
     if not filtered.empty and date_range:
         try:
-            if isinstance(date_range, (list, tuple)) and len(date_range) == 2:
-                dmin, dmax = date_range
+            if isinstance(date_range, (list,tuple)) and len(date_range)==2:
+                dmin,dmax = date_range
             else:
                 dmin = date_range
                 dmax = date_range
@@ -309,20 +268,17 @@ def show_diary_ui(df_diary):
     if filtered.empty:
         st.info('Không có mục nhật ký khớp với bộ lọc.')
     else:
-        # prepare display
         show_df = filtered.sort_values(['date','time']).reset_index(drop=True)
         show_df_display = show_df[['date','time','activity']].rename(columns={'date':'Ngày','time':'Thời gian','activity':'Hoạt động/Địa điểm'})
         show_df_display.index = range(1, len(show_df_display)+1)
         show_df_display.index.name = 'STT'
         st.dataframe(show_df_display)
 
-        # detail area
         st.markdown('---')
         st.markdown('**Xem chi tiết mục nhật ký**')
         max_stt = len(show_df_display)
-        sel = st.number_input('Chọn số thứ tự (STT):', min_value=1, max_value=max_stt, value=1)
+        sel = st.number_input('Chọn STT:', min_value=1, max_value=max_stt, value=1)
         selected_row = show_df.iloc[sel-1]
-        # show details with VN timezone
         dt_vn = selected_row.get('datetime_vn')
         st.write(f"**Ngày:** {selected_row.get('date','-')}")
         st.write(f"**Thời gian:** {selected_row.get('time','-')}")
@@ -335,23 +291,20 @@ def show_diary_ui(df_diary):
 
 
 def show_itinerary_ui(df_itin):
-    st.subheader('Lịch trình')
+    st.header('Lịch trình')
     if df_itin.empty:
         st.info('Chưa có lịch trình.')
         return
-    # day select
     days = sorted(df_itin['day'].unique().tolist())
     day_opt = ['Tất cả'] + [f'Ngày {d}' for d in days]
     sel_day = st.selectbox('Chọn ngày', day_opt)
     if sel_day != 'Tất cả':
         day_num = int(sel_day.split()[1])
-        show = df_itin[df_itin['day'] == day_num]
+        show = df_itin[df_itin['day']==day_num]
     else:
         show = df_itin
-
     for _, r in show.sort_values('day').iterrows():
         with st.expander(f"Ngày {int(r['day'])}"):
-            # always show labels and values (including '-') per user request
             st.write('Sáng:')
             st.write(r.get('morning','-'))
             st.write('Chiều:')
@@ -361,9 +314,9 @@ def show_itinerary_ui(df_itin):
 
 
 def show_hotels_ui(df_hotels):
-    st.subheader('Thông tin Khách sạn')
+    st.header('Khách sạn')
     if df_hotels.empty:
-        st.info('Chưa có thông tin khách sạn.')
+        st.info('Chưa có dữ liệu khách sạn.')
         return
     df = df_hotels.rename(columns={'name':'Tên khách sạn','checkin':'Ngày Check-in','checkout':'Ngày Check-out','phone':'SĐT liên hệ','notes':'Ghi chú'})
     df.index = range(1, len(df)+1)
@@ -372,8 +325,8 @@ def show_hotels_ui(df_hotels):
 
 
 def show_trains_ui(df_to, df_back):
-    st.subheader('Tàu hoả')
-    col1, col2 = st.columns(2)
+    st.header('Tàu hoả')
+    col1,col2 = st.columns(2)
     with col1:
         st.markdown('**Tàu đi (đến Nha Trang)**')
         if df_to.empty:
@@ -394,30 +347,28 @@ def show_trains_ui(df_to, df_back):
             st.table(df)
 
 # ---------------------------------
-# MAIN APP LAYOUT (giữ nguyên logic ban đầu nhưng UI đẹp hơn)
+# MAIN APP LAYOUT
 # ---------------------------------
 
 def app_main():
-    # top header and popup
     st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
-    st.write('')
-    st.write('')
-    # show popup in center (no background)
+
+    # popup xuất hiện ở ngay đầu
     show_center_popup()
 
-    # two-column header with logo/title and quick actions
-    col1, col2 = st.columns([3,1])
+    # header
+    col1,col2 = st.columns([3,1])
     with col1:
         st.markdown("""
-            <div style='display:flex; align-items:center; gap:12px;'>
-                <div style='width:56px; height:56px; border-radius:10px; background:linear-gradient(135deg,#06b6d4,#3b82f6); display:flex; align-items:center; justify-content:center;'>
-                    <span style='font-size:20px; color:white; font-weight:700;'>NT</span>
-                </div>
-                <div>
-                    <div style='font-size:20px; font-weight:800;'>Nhật ký & Kế hoạch — Nha Trang</div>
-                    <div class='small-muted'>Ứng dụng chỉ tra cứu — chỉnh dữ liệu tại phần DỮ LIỆU MẪU</div>
-                </div>
+        <div style='display:flex; align-items:center; gap:12px;'>
+            <div style='width:56px; height:56px; border-radius:10px; background:linear-gradient(135deg,#06b6d4,#3b82f6); display:flex; align-items:center; justify-content:center;'>
+                <span style='font-size:20px; color:white; font-weight:700;'>NT</span>
             </div>
+            <div>
+                <div style='font-size:20px; font-weight:800;'>Nhật ký & Kế hoạch — Nha Trang</div>
+                <div class='small-muted'>Ứng dụng read-only — chỉnh dữ liệu trong phần DỮ LIỆU MẪU</div>
+            </div>
+        </div>
         """, unsafe_allow_html=True)
     with col2:
         if st.button('Tải lại trang'):
@@ -425,42 +376,35 @@ def app_main():
 
     st.markdown('---')
 
-    # Sidebar filters and navigation
-    st.sidebar.title('Điều hướng & Bộ lọc')
-    st.sidebar.write('Chọn phần muốn xem:')
-
+    # sidebar navigation
+    st.sidebar.title('Điều hướng')
     nav = st.sidebar.radio('Phần', ['Tổng quan', 'Nhật ký', 'Lịch trình', 'Khách sạn', 'Tàu hỏa'], index=0)
 
-    # Build dataframes safely
+    # build dataframes
     df_diary = build_diary_df(diary_entries)
     df_itin = build_itin_df(itinerary)
     df_hotels = build_hotels_df(hotels)
     df_tr_to, df_tr_back = build_trains_df(trains)
 
-    # Show selected section
+    # show selected
     if nav == 'Tổng quan':
         show_overview(trip_meta)
-
-    if nav == 'Nhật ký':
+    elif nav == 'Nhật ký':
         show_diary_ui(df_diary)
-
-    if nav == 'Lịch trình':
+    elif nav == 'Lịch trình':
         show_itinerary_ui(df_itin)
-
-    if nav == 'Khách sạn':
+    elif nav == 'Khách sạn':
         show_hotels_ui(df_hotels)
-
-    if nav == 'Tàu hỏa':
+    elif nav == 'Tàu hỏa':
         show_trains_ui(df_tr_to, df_tr_back)
 
-    # Footer
     st.markdown('---')
-    st.markdown('<div style="font-size:13px; color:#6b7280">Phiên bản: 1.0 — Ứng dụng read-only. Dữ liệu mẫu ở đầu file.</div>', unsafe_allow_html=True)
-
+    st.markdown('<div style="font-size:13px; color:#6b7280">Phiên bản: 1.0 — Read-only app. Dữ liệu mẫu ở đầu file.</div>', unsafe_allow_html=True)
 
 # ---------------------------------
 # RUN
 # ---------------------------------
+
 if __name__ == '__main__':
     try:
         app_main()
@@ -468,9 +412,9 @@ if __name__ == '__main__':
         logger.exception('Ứng dụng gặp lỗi khi chạy:')
         st.error(f'Ứng dụng gặp lỗi: {e}')
 
-# ============================
+# ==========================
 # GHI CHÚ
-# - Giữ nguyên read-only: không có hàm lưu hoặc ghi file.
-# - Bạn có thể mở rộng UI (chỉnh CSS) trong GLOBAL_CSS.
-# - Để tắt popup mặc định, thay st.session_state['notice_shown'] = True ở đầu.
-# ============================
+# - File này là read-only: không có chức năng thêm/sửa/xóa.
+# - Bạn có thể dán dữ liệu nhật ký giấy vào danh sách `diary_entries`.
+# - Nếu muốn popup không hiện mặc định, sửa hàm show_center_popup().
+# ==========================
