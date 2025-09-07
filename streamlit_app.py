@@ -4,7 +4,7 @@ Streamlit Read-only App: Tra cứu Nhật ký & Kế hoạch Du lịch Nha Trang
 HƯỚNG DẪN NGẮN:
 - App chỉ đọc (read-only). Bạn sửa dữ liệu bằng cách chỉnh các biến ở "DỮ LIỆU MẪU" phía đầu file.
 - Chạy bằng `streamlit run app_nhatrang_lookup.py`.
-
+- Popup thông báo xuất hiện khi vào trang (giữa màn hình). Bạn có thể đóng popup — nội dung trang sẽ nhích lên ngay.
 
 Nội dung file đã được mở rộng với nhiều mẫu dữ liệu để bạn dễ demo/copy.
 """
@@ -29,34 +29,51 @@ logger.setLevel(logging.INFO)
 # ---------------------------------
 # PAGE CONFIG
 # ---------------------------------
-st.set_page_config(page_title="Tra cứu Nhật ký & Kế hoạch Du Lịch - Nha Trang 2025", layout="wide", initial_sidebar_state='expanded')
+st.set_page_config(page_title="Tra cứu Nhật ký & Kế hoạch - Nha Trang", layout="wide", initial_sidebar_state='expanded')
 
 # ---------------------------------
 # DỮ LIỆU MẪU (NHIỀU MẪU ĐỂ DEMO)
 # Bạn có thể thay toàn bộ danh sách bằng dữ liệu thật của bạn.
 # ---------------------------------
 
-# Giới hạn thời gian
-min_day = datetime.date(2025, 08, 18)
-max_day = datetime.date(2025, 08, 22)
 # Nhật ký (diary_entries)
 # Mỗi mục: {'date': 'YYYY-MM-DD', 'time': 'HH:MM', 'activity': '...'}
 diary_entries = [
-    {'date':'2025-08-18','time':'07:30','activity':'Khởi hành từ Sài Gòn - ga Sài Gòn'},
-    {'date':'2025-08-18','time':'12:20','activity':'Ăn trưa trên đường'},
-    {'date':'2025-08-18','time':'17:45','activity':'Đến Nha Trang - check-in khách sạn Sunrise'},
-    {'date':'2025-08-19','time':'08:00','activity':'Ăn sáng tại quán địa phương'},
-    {'date':'2025-08-19','time':'10:00','activity':'Tham quan Viện Hải Dương học'},
-    {'date':'2025-08-19','time':'13:00','activity':'Ăn trưa - thử bún chả cá'},
-    {'date':'2025-08-19','time':'15:00','activity':'Thư giãn tại bãi biển Trần Phú'},
-    {'date':'2025-08-20','time':'07:00','activity':'Lên tàu đi Hòn Mun - lặn ngắm san hô'},
-    {'date':'2025-08-20','time':'13:30','activity':'Thăm Tháp Bà Ponagar'},
-    {'date':'2025-08-20','time':'19:30','activity':'Dạo chợ đêm Nha Trang - ăn hải sản'},
-    {'date':'2025-08-21','time':'09:00','activity':'Tham quan chùa Long Sơn'},
-    {'date':'2025-08-21','time':'12:00','activity':'Ăn trưa - nem nướng'},
-    {'date':'2025-08-21','time':'16:00','activity':'Mua quà lưu niệm tại chợ Xóm Mới'},
-    {'date':'2025-08-22','time':'08:30','activity':'Trả phòng, chuẩn bị về Sài Gòn'},
-    {'date':'2025-08-22','time':'11:00','activity':'Lên tàu trở về'},
+    {'date':'2025-08-01','time':'20:03','activity':'Khởi hành từ nhà đến ga Sài Gòn'},
+    {'date':'2025-08-01','time':'21:29','activity':'Lên tàu SNT4'},
+    {'date':'2025-08-01','time':'22:05','activity':'Tàu bắt đầu chạy'},
+    {'date':'2025-08-01','time':'22:18','activity':'Tàu chạy ngang qua cầu Bình Triệu'},
+    {'date':'2025-08-02','time':'05:27','activity':'Thức dậy trên tàu'},
+    {'date':'2025-08-02','time':'08:13','activity':'Tàu tới ga,lên xe về khách sạn Vesna,thay đồ'},
+    {'date':'2025-08-02','time':'08:21','activity':'Tới quán bún cá Nguyên Loan'},
+    {'date':'2025-08-02','time':'09:00','activity':'Tới Bảo Tàng Hải Dương Học'},
+    {'date':'2025-08-02','time':'12:00','activity':'Về lại khách sạn Vesna,chờ nhận phòng'},
+    {'date':'2025-08-02','time':'13:50','activity':'Được nhận phòng tại khách sạn Vesna'},
+    {'date':'2025-08-02','time':'15:58','activity':'Tới quán Thanh Sương,thưởng thức các món ngon'},
+    {'date':'2025-08-02','time':'17:15','activity':'Đến ga cáp treo Vinpearl,chuẩn bị lên cáp treo'},
+    {'date':'2025-08-02','time':'17:28','activity':'Lên cáp treo qua Vinpearl Harbour,vui chơi và xem các show'},
+    {'date':'2025-08-02','time':'21:40','activity':'Lên cáp treo,về lại trung tâm thành phố'},
+    {'date':'2025-08-03','time':'05:32','activity':'Thức dậy tại khách sạn Vesna'},
+    {'date':'2025-08-03','time':'07:31','activity':'Ăn sáng tại nhà hàng khách sạn Vesna'},
+    {'date':'2025-08-03','time':'09:13','activity':'Lên xe,ra cảng Du Lịch Nha Trang Mới'},
+    {'date':'2025-08-03','time':'09:55','activity':'Cano bắt đầu xuất phát đi hòn Tằm,vui chơi,tắm biển'},
+    {'date':'2025-08-03','time':'10:13','activity':'Tới hòn Tằm,vui chơi,tắm biển'},
+    {'date':'2025-08-03','time':'15:30','activity':'Lên cano, về lại cảng Du Lịch Nha Trang Mới'},
+    {'date':'2025-08-03','time':'16:15','activity':'Ăn nem nướng Đặng Văn Uyên,tráng miệng tàu hủ đá'},
+    {'date':'2025-08-03','time':'17:30','activity':'Về lại khách sạn Vesna,nghỉ ngơi'},
+    {'date':'2025-08-03','time':'20:11','activity':'Rời khách sạn Vesna,lên xe,ra tháp Trầm Hương,ăn chè Cô Sương'},
+    {'date':'2025-08-03','time':'21:45','activity':'Về lại khách sạn Vesna,nghỉ ngơi'},
+    {'date':'2025-08-04','time':'06:10','activity':'Thức dậy tại khách sạn Vesna'},
+    {'date':'2025-08-04','time':'07:00','activity':'Ăn sáng tại nhà hàng khách sạn Vesna'},
+    {'date':'2025-08-04','time':'08:52','activity':'Lên xe,tham quan Bảo Tàng Yersin'},
+    {'date':'2025-08-04','time':'09:50','activity':'Dọn dẹp phòng,chuản bị trả phòng Khách Sạn Vesna'},
+    {'date':'2025-08-04','time':'11:34','activity':'Trả phòng,chuyển qua khách sạn Thái Bình'},
+    {'date':'2025-08-04','time':'12:25','activity':'Đi chợ Đầm,ăn quán mì gia Hảo Hảo,tham quan Nhà Thờ Đá'},
+    {'date':'2025-08-04','time':'14:54','activity':'Về khách sạn Thái Bình,nghỉ ngơi'},
+    {'date':'2025-08-04','time':'19:00','activity':'Lên xe ra ga Nha Trang'},
+    {'date':'2025-08-04','time':'20:24','activity':'Lên tàu SNT1,về lại ga Sài Gòn'},
+    {'date':'2025-08-04','time':'06:10','activity':'Tàu SNT1 bắt đầu chạy,về lại ga Sài Gòn'},
+    {'date':'2025-08-05','time':'05:30','activity':'Tàu tới ga Sài Gòn,kết thúc chuyến đi'},
 ]
 
 # Thông tin chung chuyến đi
@@ -64,34 +81,31 @@ trip_meta = {
     'destination': 'Nha Trang',
     'num_days': 5,
     'num_people': 8,
-    'theme': 'Biển - Ẩm thực - Khám phá',
+    'theme': 'Best Summer!',
 }
 
 # Lịch trình chi tiết mỗi ngày
 itinerary = [
-    {'day':1, 'morning':'Khởi hành, đi tàu SE8', 'afternoon':'Nhận phòng, ăn trưa', 'evening':'Dạo bờ biển, ăn tối đại dương'},
-    {'day':2, 'morning':'Viện Hải Dương học', 'afternoon':'Thưởng thức đặc sản địa phương', 'evening':'Chợ đêm'},
-    {'day':3, 'morning':'Tàu ra Hòn Mun - lặn biển', 'afternoon':'Thư giãn trên đảo', 'evening':'BBQ hải sản'},
-    {'day':4, 'morning':'Tháp Bà Ponagar và chùa Long Sơn', 'afternoon':'Mua sắm quà', 'evening':'Xem biểu diễn âm nhạc đường phố'},
-    {'day':5, 'morning':'Trả phòng', 'afternoon':'Lên tàu về Sài Gòn', 'evening':'-'},
+    {'day':1, 'morning':'-', 'afternoon':'-', 'evening':'Lên tàu'},
+    {'day':2, 'morning':'Tới nơi,ăn sáng,Bảo Tàng Hải Dương Học', 'afternoon':'Ăn trưa,nhận phòng,nghỉ ngơi', 'evening':'Qua Vinpearl Harbour,ăn tối,xem các show'},
+    {'day':3, 'morning':'Hòn Tằm', 'afternoon':'Hòn Tằm,nem nướng,tàu hủ đá', 'evening':'Tháp Trầm Hương,chè Cô Sương'},
+    {'day':4, 'morning':'Bảo tàng Yersin', 'afternoon':'Nhà thờ Đá,chợ Đầm', 'evening':'Lên tàu về Sài Gòn'},
+    {'day':5, 'morning':'Tới Sài Gòn,hoàn thành chuyến đi', 'afternoon':'-', 'evening':'-'},
 ]
 
 # Khách sạn (có nhiều mẫu)
 hotels = [
-    {'name':'Sunrise Nha Trang','checkin':'2025-08-18','checkout':'2025-08-22','phone':'+84 912 345 678','notes':'Phòng 2 giường, view biển'},
-    {'name':'Seaside Resort','checkin':'2025-08-20','checkout':'2025-08-21','phone':'+84 258 3xxxxxx','notes':'Đặt qua app, có bữa sáng'},
+    {'name':'Vesna Hotel Nha Trang','checkin':'2025-08-02','checkout':'2025-08-04','phone':'+84 258 3885 858','notes':'Khách sạn chính,gần biển'},
+    {'name':'Khách Sạn Thái Bình Nha Trang','checkin':'2025-08-01','checkout':'2025-08-01','phone':'-','notes':'Ở tạm,gần ga Nha Trang'},
 ]
 
 # Tàu hoả thông tin (nhiều chuyến để demo)
 trains = {
     'to_nhatrang': [
-        {'train_no':'SE8','dep_time':'06:00','arr_time':'12:45'},
-        {'train_no':'SE2','dep_time':'07:30','arr_time':'14:20'},
-        {'train_no':'TN1','dep_time':'09:00','arr_time':'15:50'},
+        {'train_no':'SNT4','dep_time':'22:05','arr_time':'06:45'},
     ],
     'to_saigon': [
-        {'train_no':'SE7','dep_time':'18:00','arr_time':'00:40'},
-        {'train_no':'SE5','dep_time':'20:00','arr_time':'02:40'},
+        {'train_no':'SNT1','dep_time':'18:00','arr_time':'20:05'},
     ]
 }
 
@@ -206,7 +220,7 @@ def show_diary_ui(df_diary):
             try:
                 min_date = df_diary['date_only'].min()
                 max_date = df_diary['date_only'].max()
-                date_range = st.date_input("Khoảng ngày",value=min_day,min_value=min_day,max_value=max_day)
+                date_range = st.date_input('Khoảng ngày', value=(min_date, max_date))
             except Exception:
                 date_range = st.date_input('Khoảng ngày')
         else:
@@ -326,17 +340,17 @@ def app_main():
     with col1:
         st.markdown("""
         <div style='display:flex; align-items:center; gap:12px;'>
-            <div style='width:70px; height:70px; border-radius:12px; background:linear-gradient(135deg,#06b6d4,#3b82f6); display:flex; align-items:center; justify-content:center;'>
+            <div style='width:75px; height:75px; border-radius:14px; background:linear-gradient(135deg,#06b6d4,#3b82f6); display:flex; align-items:center; justify-content:center;'>
                 <span style='font-size:20px; color:white; font-weight:700;'>NT2025</span>
             </div>
             <div>
                 <div style='font-size:20px; font-weight:800;'>Nhật ký & Kế hoạch — Nha Trang</div>
-                <div class='small-muted'>Tra cứu thông tin về chuyến đi Nha Trang tại đây.</div>
+                <div class='small-muted'>Tra cứu,lọc,tìm kiếm thông tin về chuyến đi Nha Trang 2025</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
     with col2:
-        if st.button('Tải lại trang'):
+        if st.button('Tải lại trang',type=primary):
             st.rerun()
 
     st.markdown('---')
@@ -344,7 +358,7 @@ def app_main():
     # sidebar navigation
     st.sidebar.title('Điều hướng')
     nav = st.sidebar.radio('Phần', ['Tổng quan', 'Nhật ký', 'Lịch trình', 'Khách sạn', 'Tàu hỏa'], index=0)
-    st.sidebar.markdown('<div style="font-size:12px; color:#6b7280">Chọn một phần để xem.</div>', unsafe_allow_html=True)
+    st.sidebar.markdown('<div style="font-size:12px; color:#6b7280">Chọn một phần để xem.</div>',unsafe_allow_html=True)
 
     # build dataframes
     df_diary = build_diary_df(diary_entries)
@@ -365,7 +379,7 @@ def app_main():
         show_trains_ui(df_tr_to, df_tr_back)
 
     st.markdown('---')
-    st.markdown('<div style="font-size:13px; color:#6b7280">Phiên bản: 1.0 — Read-only app. Dữ liệu mẫu ở đầu file.</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:13px; color:#6b7280">Phiên bản: 1.24665.Xuất bản ngày 7/9/2025..</div>', unsafe_allow_html=True)
 
 # ---------------------------------
 # RUN
