@@ -322,7 +322,6 @@ def app_main():
     col1,col2 = st.columns([3,1])
     with col1:
         st.markdown("""
-        <div style='font-size:30px; font-weight:600; color:#0f172a;'>Dữ liệu trong app là dũ liệu thử nghiệm</div>', unsafe_allow_html=True
         <div style='display:flex; align-items:center; gap:12px;'>
             <div style='width:70px; height:70px; border-radius:12px; background:linear-gradient(135deg,#06b6d4,#3b82f6); display:flex; align-items:center; justify-content:center;'>
                 <span style='font-size:20px; color:white; font-weight:700;'>NT2025</span>
