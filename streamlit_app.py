@@ -29,7 +29,7 @@ logger.setLevel(logging.INFO)
 # ---------------------------------
 # PAGE CONFIG
 # ---------------------------------
-st.set_page_config(page_title="Tra cứu Nhật ký & Kế hoạch - Nha Trang", layout="wide", initial_sidebar_state='expanded')
+st.set_page_config(page_title="Tra cứu Nhật ký & Kế hoạch Du Lịch - Nha Trang 2025", layout="wide", initial_sidebar_state='expanded')
 
 # ---------------------------------
 # DỮ LIỆU MẪU (NHIỀU MẪU ĐỂ DEMO)
@@ -60,7 +60,7 @@ diary_entries = [
 trip_meta = {
     'destination': 'Nha Trang',
     'num_days': 5,
-    'num_people': 3,
+    'num_people': 8,
     'theme': 'Biển - Ẩm thực - Khám phá',
 }
 
@@ -130,7 +130,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial
 .small-muted { color: #6b7280; font-size: 13px; }
 .stat-number { font-size: 28px; font-weight: 700; color: #111827; }
 .stat-label { color: #6b7280; font-size: 13px; }
-.popup-center { position: fixed; top:50%; left:50%; transform: translate(-50%,-50%); z-index:9999; }
 </style>
 """
 
@@ -325,11 +324,11 @@ def app_main():
         st.markdown("""
         <div style='display:flex; align-items:center; gap:12px;'>
             <div style='width:56px; height:56px; border-radius:10px; background:linear-gradient(135deg,#06b6d4,#3b82f6); display:flex; align-items:center; justify-content:center;'>
-                <span style='font-size:20px; color:white; font-weight:700;'>NT</span>
+                <span style='font-size:20px; color:white; font-weight:700;'>NT2025</span>
             </div>
             <div>
                 <div style='font-size:20px; font-weight:800;'>Nhật ký & Kế hoạch — Nha Trang</div>
-                <div class='small-muted'>Ứng dụng read-only — chỉnh dữ liệu trong phần DỮ LIỆU MẪU</div>
+                <div class='small-muted'>Tra cứu thông tin về chuyến đi nha trang tại đây.</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
