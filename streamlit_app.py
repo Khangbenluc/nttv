@@ -323,7 +323,7 @@ def app_main():
     with col1:
         st.markdown("""
         <div style='display:flex; align-items:center; gap:12px;'>
-            <div style='width:65px; height:5px; border-radius:10px; background:linear-gradient(135deg,#06b6d4,#3b82f6); display:flex; align-items:center; justify-content:center;'>
+            <div style='width:65px; height:65px; border-radius:12px; background:linear-gradient(135deg,#06b6d4,#3b82f6); display:flex; align-items:center; justify-content:center;'>
                 <span style='font-size:20px; color:white; font-weight:700;'>NT2025</span>
             </div>
             <div>
