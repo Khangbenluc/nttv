@@ -341,7 +341,7 @@ def app_main():
     # sidebar navigation
     st.sidebar.title('Điều hướng')
     nav = st.sidebar.radio('Phần', ['Tổng quan', 'Nhật ký', 'Lịch trình', 'Khách sạn', 'Tàu hỏa'], index=0)
-    st.markdown('Chọn một phần để xem')
+    st.sidebar.markdown('Chọn một phần để xem.')
 
     # build dataframes
     df_diary = build_diary_df(diary_entries)
