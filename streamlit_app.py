@@ -18,6 +18,7 @@ from datetime import datetime
 import pytz
 import logging
 import textwrap
+import sys
 
 # ---------------------------------
 # LOGGING
@@ -379,7 +380,7 @@ def app_main():
         show_trains_ui(df_tr_to, df_tr_back)
 
     st.markdown('---')
-    st.markdown('<div style="font-size:13px; color:#6b7280">Phiên bản: 1.24665.Xuất bản ngày 7/9/2025..</div>', unsafe_allow_html=True)
+    st.markdown(f"<div style='font-size:12px; color:#6b7280'>Python {sys.version.split()[0]} | Streamlit {st.__version__}</div>", unsafe_allow_html=True)
 
 # ---------------------------------
 # RUN
