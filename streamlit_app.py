@@ -219,8 +219,8 @@ def show_overview(meta):
     st.markdown("<div class='section-card'>", unsafe_allow_html=True)
     cols = st.columns([2,1,1,2])
     with cols[0]:
+        st.markdown("<div class='small-muted'>Địa điểm</div>", unsafe_allow_html=True)
         st.markdown(f"<div style='font-size:22px; font-weight:800; color:#0f172a;'>{meta.get('destination','-')}</div>", unsafe_allow_html=True)
-        st.markdown("<div class='small-muted'>Địa điểm</div>")
     with cols[1]:
         st.metric(label='Số ngày', value=meta.get('num_days','-'))
     with cols[2]:
