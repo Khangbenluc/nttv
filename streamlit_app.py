@@ -36,6 +36,9 @@ st.set_page_config(page_title="Tra cứu Nhật ký & Kế hoạch Du Lịch - N
 # Bạn có thể thay toàn bộ danh sách bằng dữ liệu thật của bạn.
 # ---------------------------------
 
+# Giới hạn thời gian
+min_day = datetime.date(2025, 08, 18)
+max_day = datetime.date(2025, 08, 22)
 # Nhật ký (diary_entries)
 # Mỗi mục: {'date': 'YYYY-MM-DD', 'time': 'HH:MM', 'activity': '...'}
 diary_entries = [
@@ -203,7 +206,7 @@ def show_diary_ui(df_diary):
             try:
                 min_date = df_diary['date_only'].min()
                 max_date = df_diary['date_only'].max()
-                date_range = st.date_input('Khoảng ngày', value=(min_date, max_date))
+                date_range = st.date_input("Khoảng ngày",value=min_day,min_value=min_day,max_value=max_day)
             except Exception:
                 date_range = st.date_input('Khoảng ngày')
         else:
