@@ -73,7 +73,7 @@ diary_entries = [
     {'date':'2025-08-04','time':'14:54','activity':'Về khách sạn Thái Bình,nghỉ ngơi'},
     {'date':'2025-08-04','time':'19:00','activity':'Lên xe ra ga Nha Trang'},
     {'date':'2025-08-04','time':'20:24','activity':'Lên tàu SNT1,về lại ga Sài Gòn'},
-    {'date':'2025-08-04','time':'06:10','activity':'Tàu SNT1 bắt đầu chạy,về lại ga Sài Gòn'},
+    {'date':'2025-08-04','time':'20:28','activity':'Tàu SNT1 bắt đầu chạy,về lại ga Sài Gòn'},
     {'date':'2025-08-05','time':'05:30','activity':'Tàu tới ga Sài Gòn,kết thúc chuyến đi'},
 ]
 
@@ -106,7 +106,7 @@ trains = {
         {'train_no':'SNT4','dep_time':'22:05','arr_time':'06:45'},
     ],
     'to_saigon': [
-        {'train_no':'SNT1','dep_time':'18:00','arr_time':'20:05'},
+        {'train_no':'SNT1','dep_time':'20:05','arr_time':'04:45'},
     ]
 }
 
